@@ -114,32 +114,27 @@ medianPerDay.ReplaceNAs <- median(sumPerDay.ReplaceNAs)
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
-```{r}
+```{r, fig.height=5,fig.width=10}
 
 #For this part the weekdays() function may be of some help here. Use the dataset with the filled-in missing values for this part.
 
 #Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
 #Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). The plot should look something like the following, which was creating using simulated data:
 library(ggplot2)
-library(Hmisc)
 #add weekend/weekday factor
-replaceNAs.df$weekend <- weekdays(as.Date(replaceNAs.df$date)) %in% c("Sunday","Saturday")
+isWeekend <- weekdays(as.Date(replaceNAs.df$date)) %in% c("Sunday","Saturday")
+replaceNAs.df$weekend[isWeekend] <- "weekend"
+replaceNAs.df$weekend[!isWeekend] <- "weekday"
+#plot
 g <-ggplot(replaceNAs.df,aes(interval,steps))
-g  + facet_grid(. ~ weekend) +stat_summary(fun.data = "mean_cl_boot", colour = "red")
-#meanPerInterval.replaceNAs <- sapply(split(replaceNAs.df,list(replaceNAs.df$interval)),function(x) mean(x$steps,na.rm=TRUE) )
+g  + facet_grid(weekend ~ .) + 
+    stat_summary(fun.y = "mean", colour = "red",geom="line") +
+    labs(title="Activty Patterns for Weekday vs. Weekend") + labs(y="Mean number of steps")
 
-#weekdays <- subset(replaceNAs.df, weekdays(as.Date(replaceNAs.df$date)) != "Sunday" & weekdays(as.Date(replaceNAs.df$date)) != "Saturday")
 
 
-#plot(meanWeekday,type="l")
-#weekends <- subset(DataNoNAs, weekdays(as.Date(DataNoNAs$date)) == "Sunday" | weekdays(as.Date(DataNoNAs$date)) == "Saturday")
-
-#weekdays <- subset(DataNoNAs, weekdays(as.Date(DataNoNAs$date)) != "Sunday" & weekdays(as.Date(r$date)) != "Saturday")
-
-#meanWeekend <- sapply(split(weekends,list(weekends$interval)),function(x) mean(x$steps,na.rm=TRUE) )
-#meanWeekday <- sapply(split(weekdays,list(weekdays$interval)),function(x) mean(x$steps,na.rm=TRUE) )
-#plot(meanWeekend,type="l")
-#plot(meanWeekday,type="l")
 
 
 ```
+
+### The data show there is difference between weekday and weekend activty. On average, the is early activity on weekdays, while weekends have a higher level of activity in mid-day and late day intervals.

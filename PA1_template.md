@@ -2,46 +2,36 @@
 
 
 ## Loading and preprocessing the data
-Data contains many "NA" values, for some days all data points are "NA"s
-clean up white space also
+Data contains many "NA" values, for some days all data points are "NA"s  
+the intervals are five minute time intervals spaning an entire day.  They are coded "hhmm", so for example  1020 is 10:20am and 1835 is 18:35 in a 24 hour clock or 6:35 pm
 
 ```r
 library(knitr)
 rawData <- data.frame(read.csv("activity.csv"))
+#data frame with no NAs, this will leave some days with no values
 DataNoNAs <-rawData[complete.cases(rawData),]
 ```
 
 
 ## What is mean total number of steps taken per day?
-The "NA" values are ignored for this calcualtion, Days with "NA"'s for all data points for  that day are reported as 0 steps per day, and average and median as 0 also.
+The assignment states the "NA" values can be ignored for this calcualtion, and this is what was done.  Days with "NA"'s for all data points for that day are reported as 0 steps per day, and teh average and median as 0 also.
 
 
 
 ```r
 #split(rawData,list(rawData$date))
-sumPerDay <- sapply(split(DataNoNAs,list(DataNoNAs$date)),function(x) sum(x$steps,na.rm=TRUE) )
-plot(sumPerDay,type="h")
+sumPerDay <- sapply(split(rawData,list(rawData$date)),function(x) sum(x$steps,na.rm=TRUE) )
+hist(sumPerDay,breaks=30,xlab="Total Steps Per day",main="Histogram: Number of Steps per Day, 2012-10-01 through 2012-11-30" )
 ```
 
 ![plot of chunk unnamed-chunk-2](figure/unnamed-chunk-2.png) 
 
 ```r
-mean(sumPerDay)
+meanPerDay <- mean(sumPerDay)
+medianPerDay <- median(sumPerDay)
 ```
-
-```
-## [1] 9354
-```
-
-```r
-median(sumPerDay)
-```
-
-```
-## [1] 10395
-```
-
-
+### The mean total number of steps per day is 9354.2295
+### The median total number of steps per day is 10395
 
 ## What is the average daily activity pattern?
 
@@ -49,20 +39,19 @@ median(sumPerDay)
 
 
 ```r
-meanPerInterval <- sapply(split(DataNoNAs,list(DataNoNAs$interval)),function(x) mean(x$steps,na.rm=TRUE) )
-colnames(meanPerInterval) <- c("mean of 5min intervals")
-```
+#split data by interval and calculate means, remove NAs
+meanPerInterval <- sapply(split(rawData,list(rawData$interval)),function(x) mean(x$steps,na.rm=TRUE) )
+#extract column names for graph
+xLabels <- names(meanPerInterval)
 
-```
-## Error: attempt to set 'colnames' on an object with less than two
-## dimensions
-```
-
-```r
 #Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 
-
-plot(meanPerInterval,type="l")
+#plot data
+plot(meanPerInterval,type="l",main="Mean Number of Steps per Interval",xlab="Interval",ylab="Mean Number of Steps", xaxt="n")
+#do calculations for x axis
+xLabIndx = seq(1,288,by=10)
+#add x axis labels 
+axis(at=xLabIndx,side=1,labels=xLabels[xLabIndx],las=2)
 ```
 
 ![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3.png) 
@@ -88,11 +77,7 @@ sort(meanPerInterval,decreasing=TRUE)[1]
 ## 206.2
 ```
 
-```r
-#sapply(split(DataNoNAs,list(DataNoNAs$date)),function(x) mean(x$steps,na.rm=TRUE) )
-```
-
-
+### The 5-minute interval that on average has the maximum number of steps is 835 and the number of average steps for this interval is 206.1698 
 
 
 
@@ -102,6 +87,7 @@ Calculate and report the total number of missing values in the dataset (i.e. the
 
 
 ```r
+#check to see whre the NAs are
 sum(is.na(rawData$steps))
 ```
 
@@ -125,6 +111,10 @@ sum(is.na(rawData$interval))
 ## [1] 0
 ```
 
+```r
+#they are only in the setps data
+```
+
 
 Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
 
@@ -134,81 +124,59 @@ Create a new dataset that is equal to the original dataset but with the missing 
 
 
 ```r
+#Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
+
 #create vector of median values for intervals
 medianPerInterval <- sapply(split(DataNoNAs,list(DataNoNAs$interval)),function(x) median(x$steps,na.rm=TRUE) )
-#replace the "NA"'s
+#replace the "NA"'s, first copy rawData
 replaceNAs.df <- rawData
+#mkake index of NAs
 indx <- which(is.na(replaceNAs.df$steps==TRUE))
+#using index, replase NAs with median values
 for (i in 1:length(indx) ) {
 replaceNAs.df[indx[i],1]  = medianPerInterval[[as.character(replaceNAs.df[indx[i],3])]]
 }
 sumPerDay.ReplaceNAs <- sapply(split(replaceNAs.df,list(replaceNAs.df$date)),function(x) sum(x$steps,na.rm=TRUE) )
-plot(sumPerDay.ReplaceNAs,type="h")
+hist(sumPerDay.ReplaceNAs,breaks=30,xlab="Total Steps Per day",main="Histogram: Number of Steps per Day, 2012-10-01 through 2012-11-30" )
 ```
 
 ![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5.png) 
 
 ```r
-mean(sumPerDay.ReplaceNAs)
+meanPerDay.ReplaceNAs <- mean(sumPerDay.ReplaceNAs)
+medianPerDay.ReplaceNAs <- median(sumPerDay.ReplaceNAs)
 ```
 
-```
-## [1] 9504
-```
-
-```r
-median(sumPerDay.ReplaceNAs)
-```
-
-```
-## [1] 10395
-```
+- The mean total number of steps per day after replacing NAs is 9503.8689 , without repalcing NAs the mean is 9354.2295  
+- The median total number of steps per day after replacing NAs is 10395 , without replacing NAs the medain is 10395.  
 
 
-Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+### Imputing values for NAs by this method has an effect on the mean but not the median for this data set
+
+
 
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
 ```r
-weekends <- subset(replaceNAs.df, weekdays(as.Date(replaceNAs.df$date)) == "Sunday" | weekdays(as.Date(replaceNAs.df$date)) == "Saturday")
+#For this part the weekdays() function may be of some help here. Use the dataset with the filled-in missing values for this part.
 
-weekdays <- subset(replaceNAs.df, weekdays(as.Date(replaceNAs.df$date)) != "Sunday" & weekdays(as.Date(replaceNAs.df$date)) != "Saturday")
-
-meanWeekend <- sapply(split(weekends,list(weekends$interval)),function(x) mean(x$steps,na.rm=TRUE) )
-meanWeekday <- sapply(split(weekdays,list(weekdays$interval)),function(x) mean(x$steps,na.rm=TRUE) )
-plot(meanWeekend,type="l")
+#Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
+#Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). The plot should look something like the following, which was creating using simulated data:
+library(ggplot2)
+#add weekend/weekday factor
+isWeekend <- weekdays(as.Date(replaceNAs.df$date)) %in% c("Sunday","Saturday")
+replaceNAs.df$weekend[isWeekend] <- "weekend"
+replaceNAs.df$weekend[!isWeekend] <- "weekday"
+#plot
+g <-ggplot(replaceNAs.df,aes(interval,steps))
+g  + facet_grid(weekend ~ .) + 
+    stat_summary(fun.y = "mean", colour = "red",geom="line") +
+    labs(title="Activty Patterns for Weekday vs. Weekend") + labs(y="Mean number of steps")
 ```
 
-![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-61.png) 
+![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6.png) 
 
-```r
-plot(meanWeekday,type="l")
-```
-
-![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-62.png) 
-
-```r
-weekends <- subset(DataNoNAs, weekdays(as.Date(DataNoNAs$date)) == "Sunday" | weekdays(as.Date(DataNoNAs$date)) == "Saturday")
-
-weekdays <- subset(DataNoNAs, weekdays(as.Date(DataNoNAs$date)) != "Sunday" & weekdays(as.Date(r$date)) != "Saturday")
-```
-
-```
-## Error: object 'r' not found
-```
-
-```r
-meanWeekend <- sapply(split(weekends,list(weekends$interval)),function(x) mean(x$steps,na.rm=TRUE) )
-meanWeekday <- sapply(split(weekdays,list(weekdays$interval)),function(x) mean(x$steps,na.rm=TRUE) )
-plot(meanWeekend,type="l")
-```
-
-![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-63.png) 
-
-```r
-plot(meanWeekday,type="l")
-```
-
-![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-64.png) 
+### The data show there is difference between weekday and weekend activty. On average, the is early activity on weekdays, while weekends have a higher level of activity in mid-day and late day intervals.
